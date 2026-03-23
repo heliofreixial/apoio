@@ -689,8 +689,18 @@ function clearSearchTab(suffix){
   search("", parts[1], parts[2]);
 }
 
-/* Limpar pesquisa ao carregar no botão Voltar —
-   detectar clique em qualquer .back e limpar todos os campos */
+/* iOS: ao tocar fora do input, baixar teclado imediatamente
+   para que o próximo toque seja registado como clique */
+document.addEventListener("touchstart", function(e){
+  var active = document.activeElement;
+  if(active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")){
+    if(!active.contains(e.target)){
+      active.blur();
+    }
+  }
+}, {passive: true});
+
+/* Limpar pesquisa ao carregar no botão Voltar */
 document.addEventListener("click", function(e){
   var t = e.target;
   while(t && t !== document){
