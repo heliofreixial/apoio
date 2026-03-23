@@ -196,6 +196,14 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;background:#eeecea;color:#1
     </div>
   </div>
 
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="search" id="search-input" placeholder="Pesquisar… ex: Brasil, visto, Noruega" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+  </div>
+  <div id="search-overlay"></div>
+
   <div id="home-grid">
   <div class="tabs">
     <a href="#ent" class="tab-btn active">✈ ENTRADA</a>
@@ -619,83 +627,105 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;background:#eeecea;color:#1
 var PUE = "portugal espanha franca alemanha italia belgica austria holanda paises baixos polonia suecia dinamarca finlandia grecia chequia eslovaquia eslovenia hungria romenia bulgaria croacia lituania letonia estonia luxemburgo irlanda chipre malta noruega islandia liechtenstein andorra san marino monaco vaticano suica ue eee europeu europeia schengen";
 
 var INDEX = [
-  {id:"ue-ent",        icon:"🇪🇺",  title:"Cidadão UE / EEE / Suíça — Entrada",         sub:"BI ou passaporte europeu — ≥16 anos e-gate/RAPID",             tag:"ent", keys:PUE},
-  {id:"res-ent",       icon:"🪪",   title:"Título de residência — Entrada",              sub:"Título de residência válido",                                  tag:"ent", keys:"residencia titulo residente permanente longa duracao"},
-  {id:"fam-ent",       icon:"👨‍👩‍👧",  title:"Familiar de cidadão UE — Entrada",           sub:"Cartão de Residência de Familiar de Cidadão da União",         tag:"ent", keys:"familiar familia conjuge filho filha ascendente cartao familiar uniao"},
-  {id:"ees-gate-ent",  icon:"🌍🚀", title:"País 3.º EES → e-gate/RAPID — Entrada",      sub:"EUA, Canadá, UK, Japão, Austrália, Israel, EAU, Malásia, México, Chile", tag:"ent", keys:"eua estados unidos canada reino unido uk japao australia nova zelandia singapura israel emirados arabes malasia mexico chile isento visto ees ssk egate rapid terceiro paises terceiros"},
-  {id:"ees-box-ent",   icon:"🌍🏢", title:"País 3.º EES → balcão — Entrada",             sub:"Brasil, Argentina, China, Taiwan, Sérvia, Visto tipo C",       tag:"ent", keys:"brasil argentina china macau taiwan servia moldavia hong kong visto tipo c curta duracao terceiro ees ssk balcao box"},
-  {id:"vd-ent",        icon:"📄",   title:"Visto tipo D — Entrada",                     sub:"Longa duração: estudo, trabalho, residência",                  tag:"ent", keys:"visto tipo d nacional longa duracao estudo trabalho residencia investigacao reagrupamento familiar"},
-  {id:"ue-sai",        icon:"🇪🇺",  title:"Cidadão UE / EEE / Suíça — Saída",           sub:"BI ou passaporte europeu — ≥18 anos e-gate/RAPID",             tag:"sai", keys:PUE},
-  {id:"res-sai",       icon:"🪪",   title:"Título de residência — Saída",               sub:"Título de residência válido",                                  tag:"sai", keys:"residencia titulo residente saida balcao box"},
-  {id:"fam-sai",       icon:"👨‍👩‍👧",  title:"Familiar de cidadão UE — Saída",            sub:"Cartão de Residência de Familiar",                            tag:"sai", keys:"familiar familia conjuge filho cartao saida balcao"},
-  {id:"ees-gate-sai",  icon:"🌍🚀", title:"País 3.º EES → e-gate/RAPID — Saída",        sub:"EUA, UK, JP, Brasil, China, Argentina, Sérvia, Hong Kong…",   tag:"sai", keys:"eua canada reino unido uk japao australia nova zelandia singapura israel emirados arabes malasia mexico chile china macau taiwan servia argentina moldavia hong kong brasil saida egate rapid ssk terceiro"},
-  {id:"ees-box-sai",   icon:"🌍🏢", title:"País 3.º EES → balcão — Saída",              sub:"Outros países terceiros, Visto tipo C",                       tag:"sai", keys:"outros paises terceiros saida balcao box ssk visto tipo c curta duracao"},
-  {id:"vd-sai",        icon:"📄",   title:"Visto tipo D — Saída",                       sub:"Longa duração: estudo, trabalho, residência",                  tag:"sai", keys:"visto tipo d nacional longa duracao estudo trabalho saida balcao"},
-  {id:"tri",           icon:"✈️",   title:"Tripulação de aeronave",                     sub:"Canal de tripulações — não usa SSK",                          tag:"esp", keys:"tripulacao piloto cabine crew tripulante canal"},
-  {id:"tra",           icon:"🔁",   title:"Passageiro em trânsito",                     sub:"Zona de embarque ou fronteira normal",                         tag:"esp", keys:"transito embarque zona internacional schengen conexao voo"},
-  {id:"men-ent",       icon:"👶",   title:"Menor de 16 anos — Entrada",                sub:"Não pode usar e-gate/RAPID — balcão manual",                  tag:"esp", keys:"menor menores crianca 16 anos entrada balcao egate rapid acompanhado"},
-  {id:"men-sai",       icon:"👶",   title:"Menor de 18 anos — Saída",                  sub:"Não pode usar e-gate/RAPID — balcão manual",                  tag:"esp", keys:"menor menores crianca 18 anos saida balcao egate rapid acompanhado"},
-  {id:"asi",           icon:"🆘",   title:"Proteção internacional / Asilo",            sub:"Encaminhar para a box — autoridade",                          tag:"esp", keys:"asilo protecao internacional humanitario refugiado box balcao autoridade"},
-  {id:"dip",           icon:"🎖️",   title:"Diplomático / Serviço / NATO",              sub:"Box / Balcão manual",                                         tag:"esp", keys:"diplomatico diplomata servico nato passaporte box balcao"}
+  {id:"ue-ent",       icon:"🇪🇺",  title:"Cidadão UE / EEE / Suíça — Entrada",         sub:"BI ou passaporte europeu",          tag:"ent", keys:PUE},
+  {id:"res-ent",      icon:"🪪",   title:"Título de residência — Entrada",              sub:"Título de residência válido",       tag:"ent", keys:"residencia titulo residente permanente longa duracao"},
+  {id:"fam-ent",      icon:"👨‍👩‍👧",  title:"Familiar de cidadão UE — Entrada",           sub:"Cartão Familiar da União",          tag:"ent", keys:"familiar familia conjuge filho filha ascendente cartao familiar uniao"},
+  {id:"ees-gate-ent", icon:"🌍🚀", title:"País 3.º EES — e-gate/RAPID — Entrada",      sub:"EUA, Canadá, UK, Japão, Israel…",   tag:"ent", keys:"eua estados unidos canada reino unido uk japao australia nova zelandia singapura israel emirados arabes malasia mexico chile isento visto ees ssk egate rapid terceiro"},
+  {id:"ees-box-ent",  icon:"🌍🏢", title:"País 3.º EES — balcão — Entrada",             sub:"Brasil, China, Taiwan, Visto C…",   tag:"ent", keys:"brasil argentina china macau taiwan servia moldavia hong kong visto tipo c curta duracao terceiro ees ssk balcao box"},
+  {id:"vd-ent",       icon:"📄",   title:"Visto tipo D — Entrada",                     sub:"Estudo, trabalho, residência…",     tag:"ent", keys:"visto tipo d nacional longa duracao estudo trabalho residencia investigacao reagrupamento familiar"},
+  {id:"ue-sai",       icon:"🇪🇺",  title:"Cidadão UE / EEE / Suíça — Saída",           sub:"BI ou passaporte europeu",          tag:"sai", keys:PUE},
+  {id:"res-sai",      icon:"🪪",   title:"Título de residência — Saída",               sub:"Título de residência válido",       tag:"sai", keys:"residencia titulo residente saida balcao box"},
+  {id:"fam-sai",      icon:"👨‍👩‍👧",  title:"Familiar de cidadão UE — Saída",            sub:"Cartão Familiar da União",          tag:"sai", keys:"familiar familia conjuge filho cartao saida balcao"},
+  {id:"ees-gate-sai", icon:"🌍🚀", title:"País 3.º EES — e-gate/RAPID — Saída",        sub:"EUA, UK, Brasil, China, Sérvia…",  tag:"sai", keys:"eua canada reino unido uk japao australia nova zelandia singapura israel emirados arabes malasia mexico chile china macau taiwan servia argentina moldavia hong kong brasil saida egate rapid ssk terceiro"},
+  {id:"ees-box-sai",  icon:"🌍🏢", title:"País 3.º EES — balcão — Saída",              sub:"Outros países terceiros, Visto C", tag:"sai", keys:"outros paises terceiros saida balcao box ssk visto tipo c curta duracao"},
+  {id:"vd-sai",       icon:"📄",   title:"Visto tipo D — Saída",                       sub:"Estudo, trabalho, residência…",     tag:"sai", keys:"visto tipo d nacional longa duracao estudo trabalho saida balcao"},
+  {id:"tri",          icon:"✈️",   title:"Tripulação de aeronave",                     sub:"Canal exclusivo — sem SSK",         tag:"esp", keys:"tripulacao piloto cabine crew tripulante canal"},
+  {id:"tra",          icon:"🔁",   title:"Passageiro em trânsito",                     sub:"Embarque ou fronteira normal",      tag:"esp", keys:"transito embarque zona internacional schengen conexao voo"},
+  {id:"men-ent",      icon:"👶",   title:"Menor de 16 anos — Entrada",                sub:"Não pode usar e-gate/RAPID",        tag:"esp", keys:"menor menores crianca 16 anos entrada balcao egate rapid acompanhado"},
+  {id:"men-sai",      icon:"👶",   title:"Menor de 18 anos — Saída",                  sub:"Não pode usar e-gate/RAPID",        tag:"esp", keys:"menor menores crianca 18 anos saida balcao egate rapid acompanhado"},
+  {id:"asi",          icon:"🆘",   title:"Proteção internacional / Asilo",            sub:"Encaminhar para box — autoridade", tag:"esp", keys:"asilo protecao internacional humanitario refugiado box balcao autoridade"},
+  {id:"dip",          icon:"🎖️",   title:"Diplomático / Serviço / NATO",              sub:"Box / Balcão manual",               tag:"esp", keys:"diplomatico diplomata servico nato passaporte box balcao"}
 ];
 
 var TAG_LABELS = {ent:"Entrada", sai:"Saída", esp:"Especial"};
 
 function normalize(s){
   return (s||"").toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/[^a-z0-9 ]/g," ");
 }
 
-function doSearch(q){
-  var overlay = document.getElementById("search-overlay");
-  var clr     = document.getElementById("search-clear");
-  var inp     = normalize(q.trim());
-  if(!inp){
+function renderHits(hits, q, overlayId, clearCall){
+  var overlay = document.getElementById(overlayId);
+  if(!overlay) return;
+  if(hits === null){
+    overlay.innerHTML = "";
     overlay.classList.remove("active");
-    overlay.innerHTML="";
-    clr.style.display="none";
     return;
   }
-  clr.style.display="block";
-  var terms = inp.split(/ +/).filter(Boolean);
-  var hits = INDEX.filter(function(item){
-    var hay = normalize(item.title+" "+item.sub+" "+item.keys);
-    return terms.every(function(t){ return hay.indexOf(t)>=0; });
-  });
-  var content;
   if(!hits.length){
-    content='<div class="search-empty">Sem resultados para "<strong>'+q+'</strong>"</div>';
+    overlay.innerHTML = '<div class="search-empty">Sem resultados para "<strong>'+q+'</strong>"</div>';
   } else {
-    content='<div class="search-results">'
-      +hits.map(function(h){
-        return '<a href="#'+h.id+'" class="search-result-item" onclick="clearSearchDelayed()">'
-          +'<span class="sri-icon">'+h.icon+'</span>'
-          +'<div><div class="sri-title">'+h.title+'</div>'
+    overlay.innerHTML = hits.map(function(h){
+      return '<a href="#'+h.id+'" class="search-result-item" onclick="'+clearCall+'">'
+        +'<span class="sri-icon">'+h.icon+'</span>'
+        +'<div>'
+          +'<div class="sri-title">'+h.title+'</div>'
           +'<div class="sri-sub">'+h.sub+'</div>'
           +'<span class="sri-tag sri-'+h.tag+'">'+TAG_LABELS[h.tag]+'</span>'
-          +'</div></a>';
-      }).join("")
-      +'</div>';
+        +'</div></a>';
+    }).join("");
   }
-  overlay.innerHTML=content;
   overlay.classList.add("active");
 }
 
-function clearSearch(){
-  document.getElementById("search-input").value="";
-  doSearch("");
+function search(q, overlayId, clearCall, gridId){
+  var inp  = normalize(q.trim());
+  var grid = gridId ? document.getElementById(gridId) : null;
+  var clrId = overlayId.replace("search-overlay","search-clear");
+  var clr  = document.getElementById(clrId) || document.getElementById("search-clear");
+  if(!inp){
+    renderHits(null, q, overlayId, "");
+    if(grid) grid.classList.remove("hidden");
+    if(clr)  clr.style.display = "none";
+    return;
+  }
+  if(clr)  clr.style.display = "block";
+  if(grid) grid.classList.add("hidden");
+  var terms = inp.split(/ +/).filter(Boolean);
+  var hits = INDEX.filter(function(item){
+    var hay = normalize(item.title+" "+item.sub+" "+item.keys);
+    return terms.every(function(t){ return hay.indexOf(t) >= 0; });
+  });
+  renderHits(hits, q, overlayId, clearCall);
 }
-function clearSearchDelayed(){ setTimeout(clearSearch,250); }
 
-var si=document.getElementById("search-input");
-["input","change","search","keyup"].forEach(function(ev){
-  si.addEventListener(ev,function(){ doSearch(this.value); });
-});
-si.addEventListener("keydown",function(e){
-  if(e.key==="Enter"){ e.preventDefault(); doSearch(this.value); this.blur(); }
-});
+function clearSearch(){
+  var si = document.getElementById("search-input");
+  if(si) si.value = "";
+  search("", "search-overlay", "", "home-grid");
+}
+function clearSearchTab(suffix){
+  var si = document.getElementById("search-input-"+suffix);
+  if(si) si.value = "";
+  search("", "search-overlay-"+suffix, "clearSearchTab('"+suffix+"')", null);
+}
+
+function wire(inputId, overlayId, clearCall, gridId){
+  var si = document.getElementById(inputId);
+  if(!si) return;
+  function run(){ search(si.value, overlayId, clearCall, gridId); }
+  ["input","change","search","keyup"].forEach(function(ev){ si.addEventListener(ev, run); });
+  si.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); run(); si.blur(); }
+  });
+}
+
+wire("search-input",     "search-overlay",     "clearSearch()",        "home-grid");
+wire("search-input-ent", "search-overlay-ent", "clearSearchTab('ent')", null);
+wire("search-input-sai", "search-overlay-sai", "clearSearchTab('sai')", null);
 </script>
+
 
 </div><!-- /wrap -->
 
