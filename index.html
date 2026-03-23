@@ -635,10 +635,11 @@ function renderHits(hits, q, overlayId, clearCall){
     return;
   }
   if(!hits.length){
-    overlay.innerHTML = '<div class="search-empty">Sem resultados para "<strong>'+q+'</strong>"</div>';
+    overlay.innerHTML = '<div class="s-empty">Sem resultados para "<strong>'+q+'</strong>"</div>';
   } else {
+    /* SEM onclick nos resultados — navega directamente pelo href sem conflito */
     overlay.innerHTML = hits.map(function(h){
-      return '<a href="#'+h.id+'" class="search-result-item" onclick="'+clearCall+'">'
+      return '<a href="#'+h.id+'" class="search-result-item">'
         +'<span class="sri-icon">'+h.icon+'</span>'
         +'<div>'
           +'<div class="sri-title">'+h.title+'</div>'
@@ -650,12 +651,13 @@ function renderHits(hits, q, overlayId, clearCall){
   overlay.classList.add("active");
 }
 
-function search(q, overlayId, clearCall, gridId){
-  var inp  = normalize(q.trim());
-  var grid = gridId ? document.getElementById(gridId) : null;
+function search(q, overlayId, gridId){
+  var inp     = normalize(q.trim());
   var overlay = document.getElementById(overlayId);
-  var wrap = overlay ? overlay.previousElementSibling : null;
-  var clr  = wrap ? wrap.querySelector(".search-clear") : null;
+  var grid    = gridId ? document.getElementById(gridId) : null;
+  var wrap    = overlay ? overlay.previousElementSibling : null;
+  var clr     = wrap ? wrap.querySelector(".search-clear") : null;
+
   if(!inp){
     renderHits(null, q, overlayId, "");
     if(grid) grid.classList.remove("hidden");
@@ -664,42 +666,59 @@ function search(q, overlayId, clearCall, gridId){
   }
   if(clr)  clr.style.display = "block";
   if(grid) grid.classList.add("hidden");
+
   var terms = inp.split(/ +/).filter(Boolean);
   var hits = INDEX.filter(function(item){
     var hay = normalize(item.title+" "+item.sub+" "+item.keys);
     return terms.every(function(t){ return hay.indexOf(t) >= 0; });
   });
-  renderHits(hits, q, overlayId, clearCall);
+  renderHits(hits, q, overlayId, "");
 }
 
 function clearSearch(){
   var si = document.getElementById("si-home");
   if(si) si.value = "";
-  search("", "sr-home", "", "hc-home");
+  search("", "sr-home", "hc-home");
 }
 function clearSearchTab(suffix){
-  var sfx = {ent:'si-ent',sai:'si-sai'}[suffix]||('si-'+suffix);
-  var ovl = {ent:'sr-ent',sai:'sr-sai'}[suffix]||('sr-'+suffix);
-  var hcl = {ent:'hc-ent',sai:'hc-sai'}[suffix]||('hc-'+suffix);
-  var si = document.getElementById(sfx);
-  if(si) si.value = '';
-  search('', ovl, "clearSearchTab('"+suffix+"')", hcl);
+  var ids = {ent:["si-ent","sr-ent","hc-ent"], sai:["si-sai","sr-sai","hc-sai"]};
+  var parts = ids[suffix];
+  if(!parts) return;
+  var si = document.getElementById(parts[0]);
+  if(si) si.value = "";
+  search("", parts[1], parts[2]);
 }
 
-function wire(inputId, overlayId, clearCall, gridId){
+/* Limpar pesquisa ao carregar no botão Voltar —
+   detectar clique em qualquer .back e limpar todos os campos */
+document.addEventListener("click", function(e){
+  var t = e.target;
+  while(t && t !== document){
+    if(t.classList && t.classList.contains("back")){
+      clearSearch();
+      clearSearchTab("ent");
+      clearSearchTab("sai");
+      break;
+    }
+    t = t.parentElement;
+  }
+});
+
+function wire(inputId, overlayId, gridId){
   var si = document.getElementById(inputId);
   if(!si) return;
-  function run(){ search(si.value, overlayId, clearCall, gridId); }
+  function run(){ search(si.value, overlayId, gridId); }
   ["input","change","search","keyup"].forEach(function(ev){ si.addEventListener(ev, run); });
   si.addEventListener("keydown", function(e){
     if(e.key === "Enter"){ e.preventDefault(); run(); si.blur(); }
   });
 }
 
-wire("si-home", "sr-home", "clearSearch()",        "hc-home");
-wire("si-ent",  "sr-ent",  "clearSearchTab('ent')", "hc-ent");
-wire("si-sai",  "sr-sai",  "clearSearchTab('sai')", "hc-sai");
+wire("si-home", "sr-home", "hc-home");
+wire("si-ent",  "sr-ent",  "hc-ent");
+wire("si-sai",  "sr-sai",  "hc-sai");
 </script>
+
 
 </div><!-- /wrap -->
 
