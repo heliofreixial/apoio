@@ -140,7 +140,7 @@ body{font-family:-apple-system,'Segoe UI',sans-serif;background:#eeecea;color:#1
 .search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:17px;color:#aaa;cursor:pointer;display:none;background:none;border:none;padding:4px;line-height:1}
 .s-results{display:none;flex-direction:column;gap:8px;margin-bottom:12px}
 .s-results.active{display:flex}
-.search-result-item{background:#fff;border:1.5px solid #e0e0da;border-radius:14px;padding:14px 15px;text-decoration:none;display:flex;align-items:center;gap:12px;color:inherit}
+.search-result-item{background:#fff;border:1.5px solid #e0e0da;border-radius:14px;padding:14px 15px;text-decoration:none;display:flex;align-items:center;gap:12px;color:inherit;cursor:pointer;-webkit-user-select:none}
 .search-result-item:active{opacity:.7}
 .sri-icon{font-size:22px;flex-shrink:0}
 .sri-title{font-size:13px;font-weight:700;color:#1a1a18;margin-bottom:2px;line-height:1.3}
@@ -626,7 +626,7 @@ function normalize(s){
     .replace(/[^a-z0-9 ]/g," ");
 }
 
-function renderHits(hits, q, overlayId, clearCall){
+function renderHits(hits, q, overlayId){
   var overlay = document.getElementById(overlayId);
   if(!overlay) return;
   if(hits === null){
@@ -637,16 +637,31 @@ function renderHits(hits, q, overlayId, clearCall){
   if(!hits.length){
     overlay.innerHTML = '<div class="s-empty">Sem resultados para "<strong>'+q+'</strong>"</div>';
   } else {
-    /* SEM onclick nos resultados — navega directamente pelo href sem conflito */
     overlay.innerHTML = hits.map(function(h){
-      return '<a href="#'+h.id+'" class="search-result-item">'
+      /* data-target em vez de href — evita conflito iOS teclado+click */
+      return '<div class="search-result-item" data-target="'+h.id+'">'
         +'<span class="sri-icon">'+h.icon+'</span>'
         +'<div>'
           +'<div class="sri-title">'+h.title+'</div>'
           +'<div class="sri-sub">'+h.sub+'</div>'
           +'<span class="sri-tag sri-'+h.tag+'">'+TAG_LABELS[h.tag]+'</span>'
-        +'</div></a>';
+        +'</div></div>';
     }).join("");
+    /* touchend: navega imediatamente sem esperar click */
+    overlay.querySelectorAll("[data-target]").forEach(function(el){
+      el.addEventListener("touchend", function(e){
+        e.preventDefault();
+        var id = el.getAttribute("data-target");
+        /* fechar teclado primeiro */
+        if(document.activeElement) document.activeElement.blur();
+        /* navegar */
+        window.location.hash = id;
+      });
+      /* fallback para desktop/mouse */
+      el.addEventListener("click", function(){
+        window.location.hash = el.getAttribute("data-target");
+      });
+    });
   }
   overlay.classList.add("active");
 }
@@ -659,7 +674,7 @@ function search(q, overlayId, gridId){
   var clr     = wrap ? wrap.querySelector(".search-clear") : null;
 
   if(!inp){
-    renderHits(null, q, overlayId, "");
+    renderHits(null, q, overlayId);
     if(grid) grid.classList.remove("hidden");
     if(clr)  clr.style.display = "none";
     return;
@@ -672,7 +687,7 @@ function search(q, overlayId, gridId){
     var hay = normalize(item.title+" "+item.sub+" "+item.keys);
     return terms.every(function(t){ return hay.indexOf(t) >= 0; });
   });
-  renderHits(hits, q, overlayId, "");
+  renderHits(hits, q, overlayId);
 }
 
 function clearSearch(){
