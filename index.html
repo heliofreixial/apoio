@@ -819,19 +819,19 @@ function showPage(id) {
   window.scrollTo(0, 0);
 }
 
-// Interceptar todos os cliques em links internos
-document.addEventListener('click', function(e) {
+// Navegação interna — touchstart para iOS, click para desktop
+function handleNav(e, isTouch) {
   var t = e.target;
   while (t && t !== document) {
     if (t.tagName === 'A' && t.getAttribute('href') && t.getAttribute('href').startsWith('#')) {
       e.preventDefault();
-      var target = t.getAttribute('href').slice(1);
-      showPage(target);
+      if (document.activeElement) document.activeElement.blur();
+      showPage(t.getAttribute('href').slice(1));
       return;
     }
     if (t.classList && t.classList.contains('back')) {
       e.preventDefault();
-      // Determinar para onde voltar
+      if (document.activeElement) document.activeElement.blur();
       var pg = document.getElementById('pg-' + currentPage);
       var backLink = pg ? pg.querySelector('.back') : null;
       var backTarget = backLink ? backLink.getAttribute('href').slice(1) : 'home';
@@ -840,10 +840,12 @@ document.addEventListener('click', function(e) {
     }
     t = t.parentElement;
   }
-});
+}
+document.addEventListener('touchstart', function(e) { handleNav(e, true); }, {passive: false});
+document.addEventListener('click',      function(e) { handleNav(e, false); });
 
-// touchend nos resultados de pesquisa (data-target)
-document.addEventListener('touchend', function(e) {
+// data-target: usar touchstart para iOS (mais rápido que touchend/click)
+document.addEventListener('touchstart', function(e) {
   var t = e.target;
   while (t && t !== document) {
     if (t.getAttribute && t.getAttribute('data-target')) {
@@ -856,11 +858,12 @@ document.addEventListener('touchend', function(e) {
   }
 }, {passive: false});
 
-// click nos resultados de pesquisa (fallback desktop)
+// click nos resultados de pesquisa (fallback desktop/mouse)
 document.addEventListener('click', function(e) {
   var t = e.target;
   while (t && t !== document) {
     if (t.getAttribute && t.getAttribute('data-target')) {
+      e.preventDefault();
       showPage(t.getAttribute('data-target'));
       return;
     }
